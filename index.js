@@ -1,6 +1,7 @@
 const core = require('@actions/core');
 const {deployForEnv} = require('pm2-deploy');
 const fs=require('fs');
+const path=require('path');
 init();
 
 async function init() {
@@ -9,20 +10,19 @@ async function init() {
  
     const options = {
       configFile: get('configFile')||process.env.CONFIG_FILE,
-      environment: get('environment'),
-      command: get('command'),
-      environment:get('environment'),
-host:get('host'),
-path:get('path'),
-repo:get('repo'),
-user:get('user'),
-key:get('key'),
-ref:get('ref')
+      environment: get('environment')||process.env.DEPLOY_ENVIRONMENT,
+      host:get('host')||process.env.DEPLOY_HOST,
+      pathname:get('path')||process.env.DEPLOY_PATH,
+      repo:get('repo')||process.env.DEPLOY_REPO_URL,
+      user:get('user')||process.env.DEPLOY_USER,
+      key:get('key')||process.env.DEPLOY_KEY_FILE,
+      ref:get('ref')||process.env.DEPLOY_BRANCH,
+      command: get('command')||process.env.DEPLOY_COMMAND
     };
 
+    console.log(options);
     
-    
-    
+
     
     
 
@@ -33,28 +33,34 @@ ref:get('ref')
 }
 
 function runPM2(options={}) {
-  options.configFile=options.configFile||'ecosystem.config.js';
   
-  options.environment=options.environment||'development';
-  options.command=options.command||'update';
   let {
-    host,path,repo,user,key,ref,environment='development',command='update'
+    host,pathname,repo,user,key,ref,environment='development',command='update',configFile='ecosystem.config.js'
   }=options,
   placeholder={};
   placeholder[environment]={
-    host,path,repo,user,key,ref
+    host,path:pathname,repo,user,key,ref
   };
-  if(!fs.existsSync(options.configFile)) {
-    fs.writeFileSync(options.configFile.replace('.js','.aux.js'),`module.exports=`+JSON.stringify(placeholder,null,4));
+  if(!fs.existsSync(configFile)) {
+core.debug(path.parse(configFile));
+//core.setCommandEcho
+    configFile=`.temp_config.json`;
+
+    fs.writeFileSync(configFile,JSON.stringify(placeholder,null,4));
   }
+  try {
   deployForEnv(
-    {
-      host,path,repo,user,key,ref
-    },[
-    options.configFile,options.environment,options.command
+    placeholder,
+    environment,
+    [
+    configFile,environment,command
   ],    (err,data)=> {
     if (err ) {
       core.setFailed('PM2 run failed!' + (err || ''));
     }
   });
+} catch (error) {
+  console.warn(error);
+  core.setFailed(error.message);
+} 
 }

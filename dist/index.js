@@ -1,13 +1,130 @@
 module.exports =
-/******/ (() => { // webpackBootstrap
-/******/ 	var __webpack_modules__ = ({
+/******/ (function(modules, runtime) { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		var threw = true;
+/******/ 		try {
+/******/ 			modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 			threw = false;
+/******/ 		} finally {
+/******/ 			if(threw) delete installedModules[moduleId];
+/******/ 		}
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	__webpack_require__.ab = __dirname + "/";
+/******/
+/******/ 	// the startup function
+/******/ 	function startup() {
+/******/ 		// Load entry module and return exports
+/******/ 		return __webpack_require__(104);
+/******/ 	};
+/******/
+/******/ 	// run startup
+/******/ 	return startup();
+/******/ })
+/************************************************************************/
+/******/ ({
 
-/***/ 932:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 82:
+/***/ (function(__unusedmodule, exports) {
 
-const core = __webpack_require__(186);
-const {deployForEnv} = __webpack_require__(499);
+"use strict";
 
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+//# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 87:
+/***/ (function(module) {
+
+module.exports = require("os");
+
+/***/ }),
+
+/***/ 102:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+// For internal use, subject to change.
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs = __importStar(__webpack_require__(747));
+const os = __importStar(__webpack_require__(87));
+const utils_1 = __webpack_require__(82);
+function issueCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
+    }
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
+    }
+    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
+    });
+}
+exports.issueCommand = issueCommand;
+//# sourceMappingURL=file-command.js.map
+
+/***/ }),
+
+/***/ 104:
+/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+
+const core = __webpack_require__(470);
+const {deployForEnv} = __webpack_require__(430);
+const fs=__webpack_require__(747);
+const path=__webpack_require__(622);
 init();
 
 async function init() {
@@ -16,13 +133,21 @@ async function init() {
  
     const options = {
       configFile: get('configFile')||process.env.CONFIG_FILE,
-      environment: get('environment'),
-      command: get('command')
+      environment: get('environment')||process.env.DEPLOY_ENVIRONMENT,
+      host:get('host')||process.env.DEPLOY_HOST,
+      pathname:get('path')||process.env.DEPLOY_PATH,
+      repo:get('repo')||process.env.DEPLOY_REPO_URL,
+      user:get('user')||process.env.DEPLOY_USER,
+      key:get('key')||process.env.DEPLOY_KEY_FILE,
+      ref:get('ref')||process.env.DEPLOY_BRANCH,
+      command: get('command')||process.env.DEPLOY_COMMAND
     };
+
+    console.log(options);
+    
 
     
     
-   console.log(options);
 
     runPM2(options);
   } catch (error) {
@@ -31,24 +156,207 @@ async function init() {
 }
 
 function runPM2(options={}) {
-  options.configFile=options.configFile||'ecosystem.config.js';
   
-  options.environment=options.environment||'development';
-  options.command=options.command||'update';
-  deployForEnv(require(options.configFile).deploy,options.environment,[
-    options.configFile,options.environment,options.command
+  let {
+    host,pathname,repo,user,key,ref,environment='development',command='update',configFile='ecosystem.config.js'
+  }=options,
+  placeholder={};
+  placeholder[environment]={
+    host,path:pathname,repo,user,key,ref
+  };
+  if(!fs.existsSync(configFile)) {
+core.debug(path.parse(configFile));
+//core.setCommandEcho
+    configFile=`.temp_config.json`;
+
+    fs.writeFileSync(configFile,JSON.stringify(placeholder,null,4));
+  }
+  try {
+  deployForEnv(
+    placeholder,
+    environment,
+    [
+    configFile,environment,command
   ],    (err,data)=> {
     if (err ) {
       core.setFailed('PM2 run failed!' + (err || ''));
     }
   });
+} catch (error) {
+  console.warn(error);
+  core.setFailed(error.message);
+} 
 }
 
 
 /***/ }),
 
-/***/ 351:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ 129:
+/***/ (function(module) {
+
+module.exports = require("child_process");
+
+/***/ }),
+
+/***/ 430:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+"use strict";
+
+
+// eslint-disable-next-line camelcase
+var child_process = __webpack_require__(129);
+var format = __webpack_require__(669).format;
+var path = __webpack_require__(622);
+var series = __webpack_require__(712);
+var tv4 = __webpack_require__(702);
+
+var schema = {
+  type: 'object',
+  properties: {
+    user: { type: 'string', minLength: 1 },
+    host: { type: ['string', 'array'] },
+    repo: { type: 'string' },
+    path: { type: 'string' },
+    ref: { type: 'string' },
+    fetch: { type: 'string' },
+  },
+  required: ['host', 'repo', 'path', 'ref'],
+};
+
+/**
+ * Spawn a modified version of visionmedia/deploy
+ * @private
+ * @param {object} config config to be piped to deploy
+ * @param {array}  args custom deploy command-line arguments
+ * @param {DeployCallback} cb done callback
+ */
+function spawn(config, args, cb) {
+  var cmd = format('echo \'%j\' | "%s"', config, __webpack_require__.ab + "deploy");
+
+  args = args || [];
+  if (args.length > 0) {
+    var cmdArgs = args.map(function (arg) {
+      return format('"%s"', arg);
+    }).join(' ');
+    cmd = [cmd, cmdArgs].join(' ');
+  }
+
+  var proc = child_process.spawn('sh', ['-c', cmd], { stdio: 'inherit' });
+  var error;
+
+  proc.on('error', function (err) {
+    error = err;
+  });
+
+  proc.on('close', function (code) {
+    if (code === 0) return cb(null, args);
+    error = error || new Error(format('Deploy failed with exit code: %s', code));
+    error.code = code;
+    return cb(error);
+  });
+}
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function castArray(arg) {
+  return Array.isArray(arg) ? arg : [arg];
+}
+
+/**
+ * Deploy to a single environment
+ * @param {object} deployConfig object containing deploy configs for all environments
+ * @param {string} env the name of the environment to deploy to
+ * @param {array} args custom deploy command-line arguments
+ * @param {DeployCallback} cb done callback
+ * @returns {boolean} return value is always `false`
+ */
+function deployForEnv(deployConfig, env, args, cb) {
+  if (!deployConfig[env]) {
+    return cb(new Error(format('%s not defined in deploy section', env)));
+  }
+
+  var envConfig = clone(deployConfig[env]);
+
+  if (envConfig.ssh_options) {
+    envConfig.ssh_options = castArray(envConfig.ssh_options).map(function (option) {
+      return format('-o %s', option);
+    }).join(' ');
+  }
+
+  var result = tv4.validateResult(envConfig, schema);
+  if (!result.valid) {
+    return cb(result.error);
+  }
+
+  if (process.env.NODE_ENV !== 'test') {
+    console.log('--> Deploying to %s environment', env);
+  }
+
+  if (process.platform !== 'win32') {
+    envConfig.path = path.resolve(envConfig.path);
+  }
+
+  var hosts = castArray(envConfig.host);
+  var jobs = hosts.map(function (host) {
+    return function job(done) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.log('--> on host %s', host.host ? host.host : host);
+      }
+
+      var config = clone(envConfig);
+      config.host = host;
+      config['post-deploy'] = prependEnv(config['post-deploy'], config.env);
+
+      spawn(config, args, done);
+    };
+  });
+  series(jobs, function (err, result) {
+    result = Array.isArray(envConfig.host) ? result : result[0];
+    cb(err, result);
+  });
+
+  return false;
+}
+
+function envToString(env) {
+  env = env || {};
+  return Object.keys(env).map(function (name) {
+    return format('%s=%s', name.toUpperCase(), env[name]);
+  }).join(' ');
+}
+
+/**
+ * Prepend command with environment variables
+ * @private
+ * @param {string} cmd command
+ * @param {object} env object containing environment variables
+ * @returns {string} concatenated shell command
+ */
+function prependEnv(cmd, env) {
+  const envVars = envToString(env);
+  if (!envVars) return cmd;
+  if (!cmd) return format('export %s', envVars);
+  return format('export %s && %s', envVars, cmd);
+}
+
+module.exports = {
+  deployForEnv: deployForEnv,
+};
+
+/**
+* @callback DeployCallback
+* @param {Error} error deployment error
+* @param {array} args custom command-line arguments provided to deploy
+*/
+
+
+/***/ }),
+
+/***/ 431:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
@@ -59,9 +367,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
+Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
-const utils_1 = __webpack_require__(278);
+const utils_1 = __webpack_require__(82);
 /**
  * Commands
  *
@@ -133,8 +441,8 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 186:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ 470:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
@@ -154,10 +462,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     result["default"] = mod;
     return result;
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const command_1 = __webpack_require__(351);
-const file_command_1 = __webpack_require__(717);
-const utils_1 = __webpack_require__(278);
+Object.defineProperty(exports, "__esModule", { value: true });
+const command_1 = __webpack_require__(431);
+const file_command_1 = __webpack_require__(102);
+const utils_1 = __webpack_require__(82);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
@@ -378,260 +686,21 @@ exports.getState = getState;
 
 /***/ }),
 
-/***/ 717:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ 622:
+/***/ (function(module) {
 
-"use strict";
-
-// For internal use, subject to change.
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__webpack_require__(747));
-const os = __importStar(__webpack_require__(87));
-const utils_1 = __webpack_require__(278);
-function issueCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
-}
-exports.issueCommand = issueCommand;
-//# sourceMappingURL=file-command.js.map
+module.exports = require("path");
 
 /***/ }),
 
-/***/ 278:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 669:
+/***/ (function(module) {
 
-"use strict";
-
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-exports.toCommandValue = toCommandValue;
-//# sourceMappingURL=utils.js.map
+module.exports = require("util");
 
 /***/ }),
 
-/***/ 499:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-// eslint-disable-next-line camelcase
-var child_process = __webpack_require__(129);
-var format = __webpack_require__(669).format;
-var path = __webpack_require__(622);
-var series = __webpack_require__(366);
-var tv4 = __webpack_require__(518);
-
-var schema = {
-  type: 'object',
-  properties: {
-    user: { type: 'string', minLength: 1 },
-    host: { type: ['string', 'array'] },
-    repo: { type: 'string' },
-    path: { type: 'string' },
-    ref: { type: 'string' },
-    fetch: { type: 'string' },
-  },
-  required: ['host', 'repo', 'path', 'ref'],
-};
-
-/**
- * Spawn a modified version of visionmedia/deploy
- * @private
- * @param {object} config config to be piped to deploy
- * @param {array}  args custom deploy command-line arguments
- * @param {DeployCallback} cb done callback
- */
-function spawn(config, args, cb) {
-  var cmd = format('echo \'%j\' | "%s"', config, __webpack_require__.ab + "deploy");
-
-  args = args || [];
-  if (args.length > 0) {
-    var cmdArgs = args.map(function (arg) {
-      return format('"%s"', arg);
-    }).join(' ');
-    cmd = [cmd, cmdArgs].join(' ');
-  }
-
-  var proc = child_process.spawn('sh', ['-c', cmd], { stdio: 'inherit' });
-  var error;
-
-  proc.on('error', function (err) {
-    error = err;
-  });
-
-  proc.on('close', function (code) {
-    if (code === 0) return cb(null, args);
-    error = error || new Error(format('Deploy failed with exit code: %s', code));
-    error.code = code;
-    return cb(error);
-  });
-}
-
-function clone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-function castArray(arg) {
-  return Array.isArray(arg) ? arg : [arg];
-}
-
-/**
- * Deploy to a single environment
- * @param {object} deployConfig object containing deploy configs for all environments
- * @param {string} env the name of the environment to deploy to
- * @param {array} args custom deploy command-line arguments
- * @param {DeployCallback} cb done callback
- * @returns {boolean} return value is always `false`
- */
-function deployForEnv(deployConfig, env, args, cb) {
-  if (!deployConfig[env]) {
-    return cb(new Error(format('%s not defined in deploy section', env)));
-  }
-
-  var envConfig = clone(deployConfig[env]);
-
-  if (envConfig.ssh_options) {
-    envConfig.ssh_options = castArray(envConfig.ssh_options).map(function (option) {
-      return format('-o %s', option);
-    }).join(' ');
-  }
-
-  var result = tv4.validateResult(envConfig, schema);
-  if (!result.valid) {
-    return cb(result.error);
-  }
-
-  if (process.env.NODE_ENV !== 'test') {
-    console.log('--> Deploying to %s environment', env);
-  }
-
-  if (process.platform !== 'win32') {
-    envConfig.path = path.resolve(envConfig.path);
-  }
-
-  var hosts = castArray(envConfig.host);
-  var jobs = hosts.map(function (host) {
-    return function job(done) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log('--> on host %s', host.host ? host.host : host);
-      }
-
-      var config = clone(envConfig);
-      config.host = host;
-      config['post-deploy'] = prependEnv(config['post-deploy'], config.env);
-console.log({config,args,env});
-      spawn(config, args, done);
-    };
-  });
-  series(jobs, function (err, result) {
-    result = Array.isArray(envConfig.host) ? result : result[0];
-    cb(err, result);
-  });
-
-  return false;
-}
-
-function envToString(env) {
-  env = env || {};
-  return Object.keys(env).map(function (name) {
-    return format('%s=%s', name.toUpperCase(), env[name]);
-  }).join(' ');
-}
-
-/**
- * Prepend command with environment variables
- * @private
- * @param {string} cmd command
- * @param {object} env object containing environment variables
- * @returns {string} concatenated shell command
- */
-function prependEnv(cmd, env) {
-  const envVars = envToString(env);
-  if (!envVars) return cmd;
-  if (!cmd) return format('export %s', envVars);
-  return format('export %s && %s', envVars, cmd);
-}
-
-module.exports = {
-  deployForEnv: deployForEnv,
-};
-
-/**
-* @callback DeployCallback
-* @param {Error} error deployment error
-* @param {array} args custom command-line arguments provided to deploy
-*/
-
-
-/***/ }),
-
-/***/ 366:
-/***/ ((module) => {
-
-/*! run-series. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-module.exports = runSeries
-
-function runSeries (tasks, cb) {
-  var current = 0
-  var results = []
-  var isSync = true
-
-  function done (err) {
-    function end () {
-      if (cb) cb(err, results)
-    }
-    if (isSync) process.nextTick(end)
-    else end()
-  }
-
-  function each (err, result) {
-    results.push(result)
-    if (++current >= tasks.length || err) done(err)
-    else tasks[current](each)
-  }
-
-  if (tasks.length > 0) tasks[0](each)
-  else done(null)
-
-  isSync = false
-}
-
-
-/***/ }),
-
-/***/ 518:
+/***/ 702:
 /***/ (function(module) {
 
 /*
@@ -2318,84 +2387,45 @@ return tv4; // used by _header.js to globalise.
 
 /***/ }),
 
-/***/ 129:
-/***/ ((module) => {
+/***/ 712:
+/***/ (function(module) {
 
-"use strict";
-module.exports = require("child_process");;
+/*! run-series. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+module.exports = runSeries
+
+function runSeries (tasks, cb) {
+  var current = 0
+  var results = []
+  var isSync = true
+
+  function done (err) {
+    function end () {
+      if (cb) cb(err, results)
+    }
+    if (isSync) process.nextTick(end)
+    else end()
+  }
+
+  function each (err, result) {
+    results.push(result)
+    if (++current >= tasks.length || err) done(err)
+    else tasks[current](each)
+  }
+
+  if (tasks.length > 0) tasks[0](each)
+  else done(null)
+
+  isSync = false
+}
+
 
 /***/ }),
 
 /***/ 747:
-/***/ ((module) => {
+/***/ (function(module) {
 
-"use strict";
-module.exports = require("fs");;
-
-/***/ }),
-
-/***/ 87:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("os");;
-
-/***/ }),
-
-/***/ 622:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("path");;
-
-/***/ }),
-
-/***/ 669:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("util");;
+module.exports = require("fs");
 
 /***/ })
 
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		var threw = true;
-/******/ 		try {
-/******/ 			__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 			threw = false;
-/******/ 		} finally {
-/******/ 			if(threw) delete __webpack_module_cache__[moduleId];
-/******/ 		}
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/compat */
-/******/ 	
-/******/ 	__webpack_require__.ab = __dirname + "/";/************************************************************************/
-/******/ 	// module exports must be returned from runtime so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(932);
-/******/ })()
-;
+/******/ });
