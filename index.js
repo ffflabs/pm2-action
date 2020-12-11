@@ -10,12 +10,21 @@ async function init() {
     const options = {
       configFile: get('configFile')||process.env.CONFIG_FILE,
       environment: get('environment'),
-      command: get('command')
+      command: get('command'),
+      environment:get('environment'),
+host:get('host'),
+path:get('path'),
+repo:get('repo'),
+user:get('user'),
+key:get('key'),
+ref:get('ref')
     };
 
     
     
-   console.log(options);
+    
+    
+    
 
     runPM2(options);
   } catch (error) {
@@ -28,7 +37,13 @@ function runPM2(options={}) {
   
   options.environment=options.environment||'development';
   options.command=options.command||'update';
-  deployForEnv(require(options.configFile).deploy,options.environment,[
+  let {
+    host,path,repo,user,key,ref
+  }=options;
+  deployForEnv(
+    {
+      host,path,repo,user,key,ref
+    },[
     options.configFile,options.environment,options.command
   ],    (err,data)=> {
     if (err ) {
