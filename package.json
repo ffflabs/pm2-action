@@ -1,6 +1,6 @@
 {
   "name": "pm2-deploy-action",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Runs PM2 deploy utility as a GitHub Action",
   "main": "dist/index.js",
   "scripts": {
