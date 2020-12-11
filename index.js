@@ -45,7 +45,7 @@ function runPM2(options={}) {
     host,path,repo,user,key,ref
   };
   if(!fs.existsSync(options.configFile)) {
-    fs.writeFileSync(options.configFile.replace('.js','.aux.js'),JSON.stringify(placeholder));
+    fs.writeFileSync(options.configFile.replace('.js','.aux.js'),`module.exports=`+JSON.stringify(placeholder,null,4));
   }
   deployForEnv(
     {
