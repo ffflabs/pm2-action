@@ -1,6 +1,6 @@
 const core = require('@actions/core');
 const {deployForEnv} = require('pm2-deploy');
-
+const fs=require('fs');
 init();
 
 async function init() {
@@ -38,8 +38,15 @@ function runPM2(options={}) {
   options.environment=options.environment||'development';
   options.command=options.command||'update';
   let {
+    host,path,repo,user,key,ref,environment='development',command='update'
+  }=options,
+  placeholder={};
+  placeholder[environment]={
     host,path,repo,user,key,ref
-  }=options;
+  };
+  if(!fs.existsSync(options.configFile)) {
+    fs.writeFileSync(options.configFile.replace('.js','.aux.js'),JSON.stringify(placeholder));
+  }
   deployForEnv(
     {
       host,path,repo,user,key,ref
