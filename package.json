@@ -1,0 +1,29 @@
+{
+  "name": "pm2-deploy-action",
+  "version": "0.0.1",
+  "description": "Runs PM2 deploy utility as a GitHub Action",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist/",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ffflabs/pm2-action.git"
+  },
+  "keywords": [
+    "actions",
+    "pm2",
+    "deploy"
+  ],
+  "author": "Matt Ball",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@actions/core": "^1.0.0",
+    "@vercel/ncc": "^0.25.1",
+    "pm2": "^4.5.0"
+  },
+  "devDependencies": {
+    "standard": "^14.0.2"
+  }
+}
