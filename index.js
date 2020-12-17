@@ -17,7 +17,9 @@ async function init() {
       user:get('user')||process.env.DEPLOY_USER,
       key:get('key')||process.env.DEPLOY_KEY_FILE,
       ref:get('ref')||process.env.DEPLOY_BRANCH,
-      command: get('command')||process.env.DEPLOY_COMMAND
+      command: get('command')||process.env.DEPLOY_COMMAND,
+      appName:get('appName')||process.env.APP_NAME,
+      'post-deploy':get('postDeploy')||process.env.POST_DEPLOY
     };
 
     console.log(options);
@@ -35,11 +37,11 @@ async function init() {
 function runPM2(options={}) {
   
   let {
-    host,pathname,repo,user,key,ref,environment='development',command='update',configFile='ecosystem.config.js'
+    host,pathname,repo,user,key,ref,environment='development',command='update',configFile='ecosystem.config.js',appName
   }=options,
   placeholder={};
   placeholder[environment]={
-    host,path:pathname,repo,user,key,ref
+    host,path:pathname,repo,user,key,ref,'post-deploy':options['post-deploy']||`pm2 restart ${appName}`
   };
   if(!fs.existsSync(configFile)) {
 core.debug(path.parse(configFile));

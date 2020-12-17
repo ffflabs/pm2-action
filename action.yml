@@ -36,6 +36,14 @@ inputs:
   configFile:
     description: 'Disable SSL verification and allow self-signed SSL'
     required: false
+  postDeploy:
+    description: 'Action to run when the deploy finishes. Usually to restart the containers'
+    default: 'pm2 ls'
+    required: false
+  appName:
+    description: 'App that should be referenced by its name in the ecosystem.config if any'
+    default: 'app'
+    required: false
   command:
     description: 'Stop collection run gracefully on error'
     required: false

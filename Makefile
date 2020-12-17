@@ -11,3 +11,6 @@ build:
 lint:
 	$(BIN)/standard
 
+
+pin:
+	pin-github-action .github/workflows/selkf.yml
