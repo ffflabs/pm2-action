@@ -13,6 +13,26 @@ jobs:
       - uses: actions/checkout@f1d3225b5376a0791fdee5a0e8eac5289355e43a # pin@v2
         with:
           fetch-depth: 2
+      - name: Set up SSH
+        run: |
+          mkdir -p $HOME/.ssh/
+          echo "$SSH_PRIVATE_KEY" > $HOME/.ssh/$DEPLOY_KEY_FILE
+          echo "Wrote to $HOME/.ssh/$DEPLOY_KEY_FILE"
+          echo "$SSH_KNOWN_HOSTS" > $HOME/.ssh/known_hosts
+          chmod 600 $HOME/.ssh/$DEPLOY_KEY_FILE
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ls -al $HOME/.ssh
+        shell: bash
+        env:
+          HOME: ${{env.HOME}}
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          DEPLOY_KEY_FILE: ${{env.DEPLOY_KEY_FILE}}
+          SSH_KNOWN_HOSTS: ${{env.DEPLOY_HOST}}
+
+      - name: Set up SSH
+        run: |
+          ls -al
+        shell: bash
 
       - uses: ffflabs/pm2-action@b1e02a3130b849f83c5bd306b36a74fb90f3213a # pin@master
         with:
@@ -21,7 +41,7 @@ jobs:
           path: ${{ env.DEPLOY_PATH }}
           repo: ${{ env.DEPLOY_REPO_URL }}
           user: ${{ env.DEPLOY_USER }}
-          key: ${{ env.DEPLOY_KEY_FILE }}
+          key: ${{env.HOME}}/.ssh/${{env.DEPLOY_KEY_FILE}}
           ref: ${{ env.DEPLOY_BRANCH }}
           post-deploy: ${{env.POST_DEPLOY}}
-          command: update
+          command: dry

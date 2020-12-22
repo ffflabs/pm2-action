@@ -68,7 +68,7 @@ function runPM2(options = {}) {
     };
   placeholder[environment] = envConfig;
   if (command === 'dry') {
-    core.debug(JSON.stringify(path.parse(envConfig)));
+    core.debug(JSON.stringify(envConfig));
     return;
   }
   var result = tv4.validateResult(envConfig, schema);
