@@ -11,3 +11,6 @@ ecosystem.config.js
 
 .temp*
 
+
+ecosystem.config.*
+
