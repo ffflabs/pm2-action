@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - uses: ffflabs/pm2-action@f02a91d777d611d7f49c9d3969b4a9e031044774 # pin@master
+      - uses: ffflabs/pm2-action@b1e02a3130b849f83c5bd306b36a74fb90f3213a # pin@master
         with:
           environment: ${{ env.DEPLOY_ENVIRONMENT }}
           host: ${{ env.DEPLOY_HOST }}
