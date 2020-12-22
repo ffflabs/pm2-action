@@ -1,0 +1,27 @@
+name: RunsItself
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  integration_tests_development:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@f1d3225b5376a0791fdee5a0e8eac5289355e43a # pin@v2
+        with:
+          fetch-depth: 2
+
+      - uses: ffflabs/pm2-action@f02a91d777d611d7f49c9d3969b4a9e031044774 # pin@master
+        with:
+          environment: ${{ env.DEPLOY_ENVIRONMENT }}
+          host: ${{ env.DEPLOY_HOST }}
+          path: ${{ env.DEPLOY_PATH }}
+          repo: ${{ env.DEPLOY_REPO_URL }}
+          user: ${{ env.DEPLOY_USER }}
+          key: ${{ env.DEPLOY_KEY_FILE }}
+          ref: ${{ env.DEPLOY_BRANCH }}
+          post-deploy: ${{env.POST_DEPLOY}}
+          command: update
