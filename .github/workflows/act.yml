@@ -29,12 +29,7 @@ jobs:
           DEPLOY_KEY_FILE: ${{env.DEPLOY_KEY_FILE}}
           SSH_KNOWN_HOSTS: ${{env.DEPLOY_HOST}}
 
-      - name: Set up SSH
-        run: |
-          ls -al
-        shell: bash
-
-      - uses: ffflabs/pm2-action@b1e02a3130b849f83c5bd306b36a74fb90f3213a # pin@master
+      - uses: ffflabs/pm2-action@08d2f7d5f45d49d2f6311171394ccdbfdd0df95b # pin@master
         with:
           environment: ${{ env.DEPLOY_ENVIRONMENT }}
           host: ${{ env.DEPLOY_HOST }}
@@ -44,4 +39,4 @@ jobs:
           key: ${{env.HOME}}/.ssh/${{env.DEPLOY_KEY_FILE}}
           ref: ${{ env.DEPLOY_BRANCH }}
           post-deploy: ${{env.POST_DEPLOY}}
-          command: dry
+          command: ${{env.DEPLOY_COMMAND}}

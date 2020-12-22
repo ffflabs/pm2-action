@@ -18,3 +18,6 @@ pin:
 
 commit: lint build 
 	@git commit dist -m=$(m)
+
+run:
+	act  -P ubuntu-latest=keymetrics/pm2:latest-jessie -s SSH_PRIVATE_KEY="$(cat deploy.key)"
