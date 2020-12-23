@@ -1,13 +1,13 @@
 {
   "name": "pm2-deploy-action",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Runs PM2 deploy utility as a GitHub Action",
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint --ext .ts,.js --ignore-path .gitignore  .",
     "lintfix": "eslint --ext .ts,.js --ignore-path .eslintignore  . --fix",
     "build": "ncc build index.js -o dist/",
-    "all":"yarn lintfix && yarn build && pin-github-action .github/workflows/env_example.yml",
+    "all": "yarn lintfix && yarn build && pin-github-action .github/workflows/env_example.yml",
     "test": "jest"
   },
   "repository": {
