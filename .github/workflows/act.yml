@@ -29,6 +29,22 @@ jobs:
           DEPLOY_KEY_FILE: ${{env.DEPLOY_KEY_FILE}}
           SSH_KNOWN_HOSTS: ${{env.DEPLOY_HOST}}
 
+      - name: Create env file
+        run: |
+          touch $HOME/.ssh/config
+          echo 'Host $DEPLOY_HOST' >> $HOME/.ssh/config
+          echo 'IdentitiesOnly yes' >> $HOME/.ssh/config
+          echo 'Port 22' >> $HOME/.ssh/config
+          echo 'User $DEPLOY_USER' >> $HOME/.ssh/config
+          echo "HostName $SSH_KNOWN_HOSTS" >> $HOME/.ssh/config
+          echo 'IdentityFile $HOME/.ssh/$DEPLOY_KEY_FILE' >> $HOME/.ssh/config
+        shell: bash
+        env:
+          DEPLOY_USER: ${{env.DEPLOY_USER}}
+          DEPLOY_HOST: ${{env.DEPLOY_HOST}}
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+          DEPLOY_KEY_FILE: ${{env.DEPLOY_KEY_FILE}}
+
       - uses: ffflabs/pm2-action@08d2f7d5f45d49d2f6311171394ccdbfdd0df95b # pin@master
         with:
           environment: ${{ env.DEPLOY_ENVIRONMENT }}
