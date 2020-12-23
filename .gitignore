@@ -4,7 +4,7 @@ ecosystem.config.js
 
 
 *.key
-
+.github
 
 .env
 
